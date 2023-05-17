@@ -1,12 +1,20 @@
 const { response } = require('express');
-const { PrismaClient } = require('@prisma/client');
-const { bcrypt } = require('bcryptjs')
-
-const prisma = new PrismaClient();
+const prisma = require('../database/config');
+const { validationResult } = require('express-validator')
+const { bcrypt } = require('bcryptjs');
 
 const userCreate = async (req, res = response) => {
 
+    const errors = validationResult( req );
     const { email, password } = req.body;
+
+    if(!errors.isEmpty()){
+        return res.status(400).json({
+            ok: false,
+            errors: errors.mapped()
+        });
+    }
+    console.log('Lo logramos ahora si fue qué alegría')
 
     try {
         let user = await prisma.user.findUnique({
@@ -27,8 +35,8 @@ const userCreate = async (req, res = response) => {
         
     
         // Encriptar contraseña
-        const salt = bcrypt.genSaltSync();
-        user.password = bcrypt.hashSync( password, salt );
+        // const salt = bcrypt.genSaltSync();
+        // user.password = bcrypt.hashSync( password, salt );
 
         console.log(user)
         // await prisma.user.create({
@@ -45,6 +53,13 @@ const userCreate = async (req, res = response) => {
         //     name: usuario.name,
         //     token
         // })
+        await prisma.$disconnect()
+    // console.dir(allUsers, { depth: null }) 
+    // res.json(allUsers);
+    res.json({
+        ok: true,
+        msg: 'Register ok'
+    });
         
     } catch (error) {
         console.log(error)
@@ -65,13 +80,7 @@ const userCreate = async (req, res = response) => {
     //     },
     // })
 
-    await prisma.$disconnect()
-    // console.dir(allUsers, { depth: null }) 
-    // res.json(allUsers);
-    res.json({
-        ok: true,
-        msg: 'Register'
-    });
+    
 }
 
 const login = async (req, res = response) => {
