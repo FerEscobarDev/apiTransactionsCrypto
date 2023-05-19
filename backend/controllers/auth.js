@@ -1,27 +1,18 @@
 const { response } = require('express');
 const prisma = require('../database/config');
-const { validationResult } = require('express-validator')
-const { bcrypt } = require('bcryptjs');
+const bcrypt = require('bcryptjs');
+const { generarJWT } = require('../helpers/jwt');
 
 const userCreate = async (req, res = response) => {
-
-    const errors = validationResult( req );
+    
     const { email, password } = req.body;
-
-    if(!errors.isEmpty()){
-        return res.status(400).json({
-            ok: false,
-            errors: errors.mapped()
-        });
-    }
-    console.log('Lo logramos ahora si fue qué alegría')
 
     try {
         let user = await prisma.user.findUnique({
-                        where: {
-                            email: email,
-                        },
-                    })
+            where: {
+                email: email,
+            },
+        })
 
         if ( user ) {
             return res.status(400).json({
@@ -31,35 +22,35 @@ const userCreate = async (req, res = response) => {
         }
 
         user = req.body;
-
-        
-    
+  
         // Encriptar contraseña
-        // const salt = bcrypt.genSaltSync();
-        // user.password = bcrypt.hashSync( password, salt );
+        const salt = bcrypt.genSaltSync();
+        user.password = bcrypt.hashSync( password, salt );
 
-        console.log(user)
-        // await prisma.user.create({
-        //     data: user,
-        // })
-        // await usuario.save();
+        const newUser = await prisma.user.create({
+            data: user,
+        });
 
-        // // Generar JWT
-        // const token = await generarJWT( usuario.id, usuario.name );
-    
-        // res.status(201).json({
-        //     ok: true,
-        //     uid: usuario.id,
-        //     name: usuario.name,
-        //     token
-        // })
+        // Generar JWT
+        const token = await generarJWT( user.id, user.name );
+
         await prisma.$disconnect()
+    
+        res.status(201).json({
+            ok: true,
+            user:{
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email
+            },
+            token
+        })
     // console.dir(allUsers, { depth: null }) 
     // res.json(allUsers);
-    res.json({
-        ok: true,
-        msg: 'Register ok'
-    });
+    // res.json({
+    //     ok: true,
+    //     msg: 'Register ok'
+    // });
         
     } catch (error) {
         console.log(error)
@@ -85,10 +76,52 @@ const userCreate = async (req, res = response) => {
 
 const login = async (req, res = response) => {
 
-    res.json({
-        ok: true,
-        msg: 'Login'
-    });
+    const { email, password } = req.body;
+
+    try{
+        let user = await prisma.user.findUnique({
+            where: {
+                email: email,
+            },
+        })
+
+        if ( !user ) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'El correo o la contraseña no coinciden con nuestros registros.'
+            });
+        }
+
+        const validarPassword = bcrypt.compareSync( password, user.password );
+
+        if ( !validarPassword ) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'El correo o la contraseña no coinciden con nuestros registros.'
+            });
+        }
+
+        const token = await generarJWT( user.id, user.name );
+
+        await prisma.$disconnect()
+    
+        res.status(200).json({
+            ok: true,
+            user:{
+                id: user.id,
+                name: user.name,
+                email: user.email
+            },
+            token
+        })
+    }
+    catch(error){
+        console.log(error)
+        res.status(500).json({
+            ok: false,
+            msg: 'Ha ocurrido un error!, contacta al administrador'
+        });
+    }
 }
 
 const renewToken = async (req, res = response) => {
