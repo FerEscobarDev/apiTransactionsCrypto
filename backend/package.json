@@ -4,16 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "start-watch": "nodemon src/index.js --inspect=0.0.0.0:9229",
-    "start-wait-debuger": "nodemon src/index.js --inspect-brk=0.0.0.0:9229"
+    "start": "node app/index.js",
+    "start-watch": "nodemon app/index.js --inspect=0.0.0.0:9229",
+    "start-wait-debuger": "nodemon app/index.js --inspect-brk=0.0.0.0:9229"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^4.13.0",
+    "@prisma/client": "^4.12.0",
+    "axios": "^1.4.0",
     "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.7",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",

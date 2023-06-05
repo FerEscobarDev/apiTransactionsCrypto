@@ -19,9 +19,9 @@ services:
     secrets:
       - db-password
     volumes:
-      - ./backend:/code/src:ro
-      - ./backend/package.json:/code/package.json
-      - ./backend/package-lock.json:/code/package-lock.json
+      - ./backend:/code/app
+      - ./backend/package.json:/code/app/package.json
+      - ./backend/package-lock.json:/code/app/package-lock.json
       - back-notused:/opt/app/node_modules
       - /var/run/secrets/db-password:/run/secrets/db-password
     networks:
